@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "expo": "^54.0.25",
+    "expo-camera": "^17.0.9",
+    "expo-location": "^19.0.7",
+    "qrcode.react": "^4.2.0"
+  }
+}
