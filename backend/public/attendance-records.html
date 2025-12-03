@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attendance Records - Admin View</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 2.5em;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        padding: 30px;
+        background: #f8fafc;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .stat-number {
+        font-size: 2em;
+        font-weight: bold;
+        color: #667eea;
+      }
+
+      .stat-label {
+        color: #64748b;
+        margin-top: 5px;
+      }
+
+      .records-container {
+        padding: 30px;
+      }
+
+      .records-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .refresh-btn {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1em;
+      }
+
+      .refresh-btn:hover {
+        background: #059669;
+      }
+
+      .records-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      .records-table th,
+      .records-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .records-table th {
+        background: #f1f5f9;
+        font-weight: 600;
+        color: #374151;
+      }
+
+      .method-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        font-weight: 500;
+      }
+
+      .method-auto {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .method-manual {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+
+      .confidence-high {
+        color: #059669;
+        font-weight: bold;
+      }
+
+      .confidence-low {
+        color: #dc2626;
+      }
+
+      .no-records {
+        text-align: center;
+        padding: 40px;
+        color: #64748b;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #667eea;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>📊 Attendance Records Dashboard</h1>
+        <p>Real-time attendance monitoring and statistics</p>
+      </div>
+
+      <div class="stats" id="statsContainer">
+        <div class="stat-card">
+          <div class="stat-number" id="totalRecords">-</div>
+          <div class="stat-label">Total Records</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="todayRecords">-</div>
+          <div class="stat-label">Today's Attendance</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="autoDetection">-</div>
+          <div class="stat-label">Auto Detections</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="avgConfidence">-</div>
+          <div class="stat-label">Avg Confidence</div>
+        </div>
+      </div>
+
+      <div class="records-container">
+        <div class="records-header">
+          <h2>Recent Attendance Records</h2>
+          <button class="refresh-btn" onclick="loadData()">🔄 Refresh</button>
+        </div>
+
+        <div id="recordsContainer">
+          <div class="loading">Loading attendance records...</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function loadData() {
+        try {
+          // Load statistics
+          const statsResponse = await fetch(
+            "http://localhost:5000/api/attendance/stats"
+          );
+          const statsData = await statsResponse.json();
+
+          if (statsData.success) {
+            document.getElementById("totalRecords").textContent =
+              statsData.stats.total;
+            document.getElementById("todayRecords").textContent =
+              statsData.stats.today;
+            document.getElementById("autoDetection").textContent =
+              statsData.stats.methods.auto_detection;
+            document.getElementById("avgConfidence").textContent =
+              Math.round(statsData.stats.averageConfidence) + "%";
+          }
+
+          // Load records
+          const recordsResponse = await fetch(
+            "http://localhost:5000/api/attendance/records"
+          );
+          const recordsData = await recordsResponse.json();
+
+          displayRecords(recordsData.records || []);
+        } catch (error) {
+          console.error("Error loading data:", error);
+          document.getElementById("recordsContainer").innerHTML =
+            '<div class="no-records">❌ Error loading data. Make sure the backend server is running on localhost:5000</div>';
+        }
+      }
+
+      function displayRecords(records) {
+        const container = document.getElementById("recordsContainer");
+
+        if (records.length === 0) {
+          container.innerHTML =
+            '<div class="no-records">📝 No attendance records found. Mark some attendance to see data here!</div>';
+          return;
+        }
+
+        const table = `
+                <table class="records-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Timestamp</th>
+                            <th>User ID</th>
+                            <th>Method</th>
+                            <th>Confidence</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${records
+                          .reverse()
+                          .map(
+                            (record) => `
+                            <tr>
+                                <td>#${record.id}</td>
+                                <td>${new Date(
+                                  record.timestamp
+                                ).toLocaleString()}</td>
+                                <td>${record.userId}</td>
+                                <td>
+                                    <span class="method-badge ${
+                                      record.method === "auto_detection"
+                                        ? "method-auto"
+                                        : "method-manual"
+                                    }">
+                                        ${record.method
+                                          .replace("_", " ")
+                                          .toUpperCase()}
+                                    </span>
+                                </td>
+                                <td class="${
+                                  record.confidence > 70
+                                    ? "confidence-high"
+                                    : "confidence-low"
+                                }">
+                                    ${
+                                      record.confidence
+                                        ? record.confidence + "%"
+                                        : "N/A"
+                                    }
+                                </td>
+                                <td>✅ ${record.status}</td>
+                            </tr>
+                        `
+                          )
+                          .join("")}
+                    </tbody>
+                </table>
+            `;
+
+        container.innerHTML = table;
+      }
+
+      // Load data when page loads
+      loadData();
+
+      // Auto-refresh every 10 seconds
+      setInterval(loadData, 10000);
+    </script>
+  </body>
+</html>

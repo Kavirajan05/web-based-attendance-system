@@ -164,6 +164,24 @@ function QrScannerPage() {
           
           <div className="success-actions">
             <button 
+              onClick={() => window.location.href = '/face-detection'}
+              style={{
+                padding: '15px 30px',
+                backgroundColor: '#059669',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
+                marginRight: '10px'
+              }}
+            >
+              📝 Mark Attendance
+            </button>
+            
+            <button 
               onClick={resetToScanner}
               style={{
                 padding: '15px 30px',
