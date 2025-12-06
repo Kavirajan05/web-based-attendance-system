@@ -20,13 +20,26 @@ function Dashboard() {
             </button>
           </Link>
           
+          <Link to="/employee-management">
+            <button className="w-full bg-green-500 p-4 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-semibold">
+              👥 Manage Employees
+            </button>
+          </Link>
+          
+          <Link to="/attendance-records">
+            <button className="w-full bg-purple-500 p-4 text-white rounded-lg hover:bg-purple-600 transition-colors duration-200 font-semibold">
+              📊 View Attendance Records
+            </button>
+          </Link>
+          
           <div className="text-sm text-gray-500 mt-6">
-            <p>Instructions:</p>
+            <p>New Enhanced Features:</p>
             <ul className="text-left mt-2 space-y-1">
-              <li>1. Open mobile app to generate QR</li>
-              <li>2. Click "Scan QR for Attendance"</li>
-              <li>3. Point camera at mobile QR code</li>
-              <li>4. System will validate attendance</li>
+              <li>✅ Individual employee QR codes</li>
+              <li>✅ Face matching with stored photos</li>
+              <li>✅ Two-factor verification (QR + Face)</li>
+              <li>✅ Employee management system</li>
+              <li>✅ Real-time attendance tracking</li>
             </ul>
           </div>
         </div>

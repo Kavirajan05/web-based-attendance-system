@@ -31,6 +31,11 @@ app.get("/test-protected", auth, (req, res) => {
 app.use("/auth", require("./routes/authRoutes"));
 app.use("/qr", require("./routes/qrRoutes"));
 app.use("/api/attendance", require("./routes/attendanceRoutes"));
+app.use("/api/employees", require("./routes/employeeRoutes"));
+app.use("/api/face", require("./routes/faceComparisonRoutes"));
+
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));

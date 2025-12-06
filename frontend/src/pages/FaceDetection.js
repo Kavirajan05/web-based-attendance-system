@@ -17,6 +17,7 @@ function FaceDetection() {
   const [autoDetectMode, setAutoDetectMode] = useState(true);
   const [countdown, setCountdown] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [lastAttendanceTime, setLastAttendanceTime] = useState(0);
 
   useEffect(() => {
     // Auto-start with quick camera setup for best speed
@@ -446,9 +447,9 @@ function FaceDetection() {
     // Auto-attendance when face is detected with good confidence
     if (stats.facesDetected > 0 && stats.confidence >= 75) {
       if (countdown === 0) {
-        // Start countdown
-        setCountdown(3);
-        startCountdown();
+        // Start 10-second single attempt countdown
+        setCountdown(10);
+        startCountdown(stats);
       }
     } else {
       // Reset countdown if face lost or confidence too low
@@ -456,34 +457,91 @@ function FaceDetection() {
     }
   }
 
-  function startCountdown() {
-    let count = 3;
+  function startCountdown(validatedStats) {
+    let count = 10;
     const timer = setInterval(() => {
       count--;
       setCountdown(count);
       
       if (count <= 0) {
         clearInterval(timer);
-        // Auto mark attendance
-        autoMarkAttendance();
+        // Disable auto mode to prevent repeating
+        setAutoDetectMode(false);
+        // Try to mark attendance once
+        autoMarkAttendance(validatedStats);
       }
     }, 1000);
   }
 
-  async function autoMarkAttendance() {
+  async function autoMarkAttendance(validatedStats) {
     if (showSuccess) return;
     
+    // Double-check confidence before proceeding
+    if (!validatedStats || validatedStats.confidence < 75) {
+      console.warn("⚠️  Auto-attendance cancelled: insufficient confidence", validatedStats?.confidence);
+      setCountdown(0);
+      return;
+    }
+    
+    // Prevent duplicate attendance within 10 seconds
+    const now = Date.now();
+    if (now - lastAttendanceTime < 10000) {
+      console.warn("⚠️  Auto-attendance cancelled: too soon since last attendance");
+      setCountdown(0);
+      return;
+    }
+    
+    setLastAttendanceTime(now);
+    
     try {
+      console.log("🔍 Starting face comparison process...");
+      
       // Capture the face image
       const faceImageData = await captureImageData();
       
-      // Prepare attendance data
+      // Step 1: Compare captured face with registered employees
+      const comparisonResponse = await fetch('http://localhost:5000/api/face/compare', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          capturedFaceImage: faceImageData
+        })
+      });
+
+      const comparisonResult = await comparisonResponse.json();
+      
+      if (!comparisonResult.success) {
+        console.error("❌ Face comparison failed:", comparisonResult.message);
+        setCountdown(0);
+        showAttendanceFailure("Face comparison system error. Please try again.", comparisonResult.message);
+        return;
+      }
+
+      if (!comparisonResult.matched) {
+        console.log("❌ No matching employee found");
+        setCountdown(0);
+        showAttendanceFailure(
+          `Employee not recognized. Best match: ${comparisonResult.bestSimilarity}% similarity.`,
+          "Please ensure you are registered in the system and position your face clearly in front of the camera."
+        );
+        return;
+      }
+
+      const matchedEmployee = comparisonResult.employee;
+      console.log(`✅ Employee recognized: ${matchedEmployee.name} (${matchedEmployee.employeeId}) - ${matchedEmployee.similarity}% similarity`);
+      
+      // Prepare attendance data with matched employee
       const attendanceData = {
         timestamp: new Date().toISOString(),
         faceImage: faceImageData,
-        method: "auto_detection",
-        confidence: detectionStats.confidence,
-        userId: "user_" + Date.now(), // TODO: Get from actual authentication
+        method: "face_recognition",
+        confidence: validatedStats.confidence,
+        faceMatchSimilarity: matchedEmployee.similarity,
+        employeeId: matchedEmployee.employeeId,
+        employeeName: matchedEmployee.name,
+        userId: matchedEmployee.employeeId, // Use actual employee ID
         deviceInfo: navigator.userAgent,
         location: window.location.href
       };
@@ -503,6 +561,9 @@ function FaceDetection() {
         const result = await response.json();
         console.log("✅ Attendance saved to database:", result);
         
+        // Show success message with employee details
+        alert(`✅ Attendance marked successfully!\n\nEmployee: ${matchedEmployee.name}\nID: ${matchedEmployee.employeeId}\nFace Match: ${matchedEmployee.similarity}%`);
+        
         // Show success page
         setShowSuccess(true);
         setAutoDetectMode(false);
@@ -511,25 +572,41 @@ function FaceDetection() {
         // Still show success but indicate storage issue
         setShowSuccess(true);
         setAutoDetectMode(false);
-        alert("Attendance recorded locally, but server storage failed. Contact administrator.");
+        alert(`Attendance recorded locally for ${matchedEmployee.name}, but server storage failed. Contact administrator.`);
       }
       
     } catch (error) {
       console.error("❌ Attendance storage error:", error);
+      setCountdown(0);
       
-      // Store locally as backup
-      storeAttendanceLocally({
-        timestamp: new Date().toISOString(),
-        method: "auto_detection",
-        confidence: detectionStats.confidence,
-        error: error.message
-      });
-      
-      // Still show success page
-      setShowSuccess(true);
-      setAutoDetectMode(false);
-      
-      alert("Attendance saved locally. Will sync when server is available.");
+      // Show failure with retry option
+      showAttendanceFailure(
+        "System error during attendance processing.",
+        `Error: ${error.message}. Please try again.`
+      );
+    }
+  }
+
+  function showAttendanceFailure(mainMessage, detailMessage) {
+    // Stop auto detection
+    setAutoDetectMode(false);
+    setCountdown(0);
+    
+    // Show error message with retry option
+    const userWantsRetry = confirm(
+      `❌ Attendance Failed\n\n${mainMessage}\n\n${detailMessage}\n\n` +
+      "Click OK to try again, or Cancel to stop."
+    );
+    
+    if (userWantsRetry) {
+      // Reset for manual retry
+      setTimeout(() => {
+        setAutoDetectMode(true);
+        setCountdown(0);
+        console.log("🔄 Ready for retry - position your face in front of the camera");
+      }, 1000);
+    } else {
+      console.log("❌ User chose not to retry");
     }
   }
 
@@ -823,7 +900,12 @@ function FaceDetection() {
               </span>
               {countdown > 0 && (
                 <span className="countdown">
-                  Auto-marking in: <strong className="countdown-number">{countdown}</strong>
+                  Face recognition attempt: <strong className="countdown-number">{countdown}s</strong>
+                </span>
+              )}
+              {!autoDetectMode && countdown === 0 && !showSuccess && (
+                <span className="retry-notice" style={{color: '#ff6b35', fontWeight: 'bold'}}>
+                  Recognition stopped. Use "Try Again" button to retry.
                 </span>
               )}
             </div>
@@ -843,6 +925,30 @@ function FaceDetection() {
               <button onClick={markAttendance} className="btn-attendance">
                 Mark Attendance Complete
               </button>
+              
+              {/* Manual retry button when auto-detection is disabled */}
+              {!autoDetectMode && countdown === 0 && !showSuccess && (
+                <button 
+                  onClick={() => {
+                    setAutoDetectMode(true);
+                    setCountdown(0);
+                    console.log("🔄 Manual retry initiated");
+                  }} 
+                  className="btn-retry"
+                  style={{
+                    backgroundColor: '#ff6b35',
+                    color: 'white',
+                    marginTop: '10px',
+                    padding: '10px 20px',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔄 Try Face Recognition Again
+                </button>
+              )}
+              
               {isLoading && (
                 <button onClick={() => setIsLoading(false)} className="btn-secondary" style={{marginTop: '10px'}}>
                   Camera Ready - Continue

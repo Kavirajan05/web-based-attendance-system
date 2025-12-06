@@ -1,0 +1,277 @@
+/* Attendance Success Page Styles */
+.attendance-success {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.success-container {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Success Animation */
+.success-animation {
+  margin-bottom: 30px;
+}
+
+.checkmark-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #28a745;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  animation: scaleIn 0.5s ease-out;
+}
+
+@keyframes scaleIn {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.checkmark {
+  width: 40px;
+  height: 20px;
+  border: 4px solid white;
+  border-top: none;
+  border-right: none;
+  transform: rotate(-45deg);
+  animation: checkmarkDraw 0.5s ease-out 0.5s both;
+}
+
+@keyframes checkmarkDraw {
+  0% { opacity: 0; transform: rotate(-45deg) scale(0); }
+  100% { opacity: 1; transform: rotate(-45deg) scale(1); }
+}
+
+/* Title */
+.success-title {
+  color: #2c3e50;
+  font-size: 2.5rem;
+  margin: 20px 0;
+  font-weight: 700;
+  animation: slideUp 0.6s ease-out 0.3s both;
+}
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Details */
+.success-details {
+  margin: 30px 0;
+  animation: slideUp 0.6s ease-out 0.5s both;
+}
+
+.employee-info h2 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 1.8rem;
+}
+
+.timestamp {
+  color: #6c757d;
+  font-size: 1.1rem;
+  margin-bottom: 25px;
+}
+
+.verification-stats {
+  display: flex;
+  justify-content: space-around;
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  margin: 20px 0;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-label {
+  display: block;
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.stat-value.success {
+  color: #28a745;
+}
+
+/* Success Message */
+.success-message {
+  margin: 30px 0;
+  animation: slideUp 0.6s ease-out 0.7s both;
+}
+
+.success-message p {
+  color: #495057;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+.security-note {
+  color: #28a745;
+  font-weight: 600;
+  background: #d4edda;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #c3e6cb;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 30px 0;
+  animation: slideUp 0.6s ease-out 0.9s both;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #545b62;
+}
+
+.btn-info {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-info:hover {
+  background: #117a8b;
+}
+
+/* Auto Redirect */
+.auto-redirect {
+  margin-top: 40px;
+  animation: slideUp 0.6s ease-out 1.1s both;
+}
+
+.auto-redirect p {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: #e9ecef;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #007bff, #28a745);
+  border-radius: 2px;
+  animation: progressFill 10s linear;
+}
+
+@keyframes progressFill {
+  0% { width: 100%; }
+  100% { width: 0%; }
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .success-container {
+    margin: 20px;
+    padding: 30px 20px;
+  }
+  
+  .success-title {
+    font-size: 2rem;
+  }
+  
+  .employee-info h2 {
+    font-size: 1.5rem;
+  }
+  
+  .verification-stats {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Background Animation */
+.attendance-success::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.05"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.05"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.03"/><circle cx="10" cy="60" r="1" fill="white" opacity="0.04"/><circle cx="90" cy="30" r="1" fill="white" opacity="0.03"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  pointer-events: none;
+}
